@@ -1,25 +1,26 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
+import { useRouter } from 'expo-router';
+import imgUsr from '../assets/images/imgUsr.png';
 
 const plans = [
-  { id: '1', name: 'Viagem para a Praia', category: 'Viagem', cost: '1.000 R$', icon: '🏖️' },
-  { id: '2', name: 'Festa de Aniversário', category: 'Pessoal', cost: '500 R$', icon: '🎉' },
-  { id: '3', name: 'Investimento em Ações', category: 'Finanças', cost: '1.000 R$', icon: '📈' },
-  { id: '4', name: 'Viagem para o Exterior', category: 'Viagem', cost: '3.000 R$', icon: '✈️' },
-  { id: '5', name: 'Projeto de Voluntariado', category: 'Social', cost: '0 R$', icon: '🤝' },
-  { id: '6', name: 'Compra de Novo Carro', category: 'Veículo', cost: '25.000 R$', icon: '🚗' },
+  { id: '1', nome: 'Viagem para a Praia', categoria: 'Viagem', custo: '1.000 R$', icone: '🏖️' },
+  { id: '2', nome: 'Festa de Aniversário', categoria: 'Pessoal', custo: '500 R$', icone: '📆' },
+  { id: '3', nome: 'Investimento em Ações', categoria: 'Finanças', custo: '1.000 R$', icone: '📈' },
+  { id: '4', nome: 'Viagem para o Exterior', categoria: 'Viagem', custo: '3.000 R$', icone: '✈️' },
+  { id: '5', nome: 'Projeto de Voluntariado', categoria: 'Social', custo: '0 R$', icone: '🤝' },
+  { id: '6', nome: 'Compra de Novo Carro', categoria: 'Veículo', custo: '25.000 R$', icone: '🚗' },
 ];
 
 export default function HomeScreen() {
+  const router = useRouter();
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.greeting}>Olá, Lucas!</Text>
-        <View style={styles.profileImageContainer}>
-          <Image
-            source={{ uri: 'https://via.placeholder.com/50' }} // Substitua com a URL da imagem do perfil
-            style={styles.profileImage}
-          />
+        <Text style={styles.boasVindas}>Olá, Lucas!</Text>
+        <View style={styles.imgUserContainer}>
+          <Image source={imgUsr} style={styles.imgUser} />
         </View>
       </View>
       <View
@@ -29,29 +30,35 @@ export default function HomeScreen() {
           marginBottom: 10,
         }}
       />
-      <Text style={styles.sectionTitle}>Planos Registrados</Text>
+      <Text style={styles.tituloSecao}>Planos Registrados</Text>
       <FlatList
         data={plans}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={styles.planItem}>
-            <Text style={styles.planIcon}>{item.icon}</Text>
-            <View style={styles.planDetails}>
-              <View style={styles.planHeader}>
-                <Text style={styles.planName}>{item.name}</Text>
-                <Text style={styles.planCost}>{item.cost}</Text>
+          <TouchableOpacity onPress={() => router.push('/detalhe_plano')}>
+            <View style={styles.itemPlano}>
+              <Text style={styles.iconePlano}>{item.icone}</Text>
+              <View style={styles.detalhesPlano}>
+                <View style={styles.cabecalhoPlano}>
+                  <Text style={styles.nomePlano}>{item.nome}</Text>
+                  <Text style={styles.custoPlano}>{item.custo}</Text>
+                </View>
+                <Text style={styles.categoriaPlano}>{item.categoria}</Text>
               </View>
-              <Text style={styles.planCategory}>{item.category}</Text>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
+        ListFooterComponent={
+          <View>
+            <TouchableOpacity style={[styles.btn, styles.btnVerPlanejamento]}>
+              <Text style={[styles.btnTexto, styles.btnVerPlanejamentoTexto]}>Ver todo planejamento</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.btn, styles.btnAdicionar]}>
+              <Text style={styles.btnTexto}>Adicionar plano</Text>
+            </TouchableOpacity>
+          </View>
+        }
       />
-      <TouchableOpacity style={[styles.button, styles.viewButton]}>
-        <Text style={[styles.buttonText, styles.viewButtonText]}>Ver todo planejamento</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={[styles.button, styles.addButton]}>
-        <Text style={styles.buttonText}>Adicionar plano</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -62,6 +69,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     paddingHorizontal: 20,
     paddingTop: 50,
+    paddingBottom: 20,
   },
   header: {
     flexDirection: 'row',
@@ -69,27 +77,27 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 20,
   },
-  greeting: {
+  boasVindas: {
     fontSize: 24,
     fontWeight: 'bold',
   },
-  profileImageContainer: {
+  imgUserContainer: {
     width: 50,
     height: 50,
     borderRadius: 25,
     backgroundColor: '#ccc',
     overflow: 'hidden',
   },
-  profileImage: {
+  imgUser: {
     width: '100%',
     height: '100%',
   },
-  sectionTitle: {
+  tituloSecao: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
   },
-  planItem: {
+  itemPlano: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
@@ -97,51 +105,51 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
     borderRadius: 10,
   },
-  planIcon: {
+  iconePlano: {
     fontSize: 30,
     marginRight: 10,
   },
-  planDetails: {
+  detalhesPlano: {
     flex: 1,
   },
-  planHeader: {
+  cabecalhoPlano: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  planName: {
+  nomePlano: {
     fontSize: 18,
     fontWeight: 'bold',
   },
-  planCost: {
+  custoPlano: {
     fontSize: 16,
     color: '#666',
   },
-  planCategory: {
+  categoriaPlano: {
     fontSize: 14,
     color: '#999',
   },
-  button: {
+  btn: {
     backgroundColor: '#000',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 10,
   },
-  buttonText: {
+  btnTexto: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  viewButton: {
+  btnVerPlanejamento: {
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#000',
   },
-  viewButtonText: {
+  btnVerPlanejamentoTexto: {
     color: '#000',
   },
-  addButton: {
-    marginBottom: 10,
+  btnAdicionar: {
+    marginBottom: 20,
   },
 });

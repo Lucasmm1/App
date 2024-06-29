@@ -53,7 +53,7 @@ export default function HomeScreen() {
             <TouchableOpacity style={[styles.btn, styles.btnVerPlanejamento]}>
               <Text style={[styles.btnTexto, styles.btnVerPlanejamentoTexto]}>Ver todo planejamento</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.btn, styles.btnAdicionar]}>
+            <TouchableOpacity style={[styles.btn, styles.btnAdicionar]} onPress={() => router.push('/adicionar_plano')}>
               <Text style={styles.btnTexto}>Adicionar plano</Text>
             </TouchableOpacity>
           </View>

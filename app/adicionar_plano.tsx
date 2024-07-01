@@ -1,20 +1,23 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { usePlanDatabase } from '@/database/usePlanDatabase';
 
 const categories = ['Viagem', 'Financeira', 'Saúde', 'Desenvolvimento'];
 
 export default function AdicionePlano() {
+  const { create, createExpense, createTask } = usePlanDatabase();
   const router = useRouter();
+
+  const [nome, setNomePlano] = useState('');
+  const [categoria, setCategoria] = useState('');
   const [despesas, setDespesas] = useState([]);
   const [tarefas, setTarefas] = useState([]);
-  const [nomePlano, setNomePlano] = useState('');
-  const [categoria, setCategoria] = useState('');
   const [descricao, setDescricao] = useState('');
 
   const adicionarDespesa = () => {
-    setDespesas([...despesas, { id: Date.now().toString(), nome: '', custo: '' }]);
+    setDespesas([...despesas, { id: Date.now().toString(), name: '', cost: '' }]);
   };
 
   const removerDespesa = (id) => {
@@ -22,12 +25,67 @@ export default function AdicionePlano() {
   };
 
   const adicionarTarefa = () => {
-    setTarefas([...tarefas, { id: Date.now().toString(), nome: '', prazo: '' }]);
+    setTarefas([...tarefas, { id: Date.now().toString(), name: '', deadline: '' }]);
   };
 
   const removerTarefa = (id) => {
     setTarefas(tarefas.filter(tarefa => tarefa.id !== id));
   };
+
+  const calcularTotalDespesas = () => {
+    return despesas.reduce((total, despesa) => total + (parseFloat(despesa.cost) || 0), 0);
+  };
+
+  async function Create() {
+    if (!nome || !categoria) {
+      Alert.alert("Por favor, preencha todos os campos obrigatórios do plano.");
+      return;
+    }
+
+    for (const despesa of despesas) {
+      if (!despesa.name || !despesa.cost) {
+        Alert.alert("Por favor, preencha todos os campos obrigatórios das despesas.");
+        return;
+      }
+    }
+
+    for (const tarefa of tarefas) {
+      if (!tarefa.name || !tarefa.deadline) {
+        Alert.alert("Por favor, preencha todos os campos obrigatórios das tarefas.");
+        return;
+      }
+    }
+
+    try {
+      const custo = calcularTotalDespesas();
+      const icone = '🆕';
+
+      // Criar um novo plano
+      const responsePlano = await create({ nome, descricao, categoria, custo: custo.toString(), icone });
+      const planoId = responsePlano.insertedRowId;
+
+      Alert.alert("Plano cadastrado com o ID: " + planoId);
+
+      // Adicionar despesas ao plano
+      for (const despesa of despesas) {
+        await createExpense({ name: despesa.name, cost: parseFloat(despesa.cost), plan_id: parseInt(planoId) });
+      }
+
+      // Adicionar tarefas ao plano
+      for (const tarefa of tarefas) {
+        await createTask({ name: tarefa.name, deadline: tarefa.deadline, plan_id: parseInt(planoId) });
+      }
+
+      Alert.alert("Despesas e tarefas adicionadas ao plano " + planoId);
+
+      // Redirecionar para a página inicial
+      router.replace('/');
+      
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Erro ao criar plano e adicionar despesas/tarefas.");
+    }
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -36,7 +94,7 @@ export default function AdicionePlano() {
       <TextInput
         style={styles.input}
         placeholder="Insira o nome do plano"
-        value={nomePlano}
+        value={nome}
         onChangeText={setNomePlano}
       />
       <Text style={styles.sectionTitle}>Categoria do plano</Text>
@@ -64,22 +122,23 @@ export default function AdicionePlano() {
           <TextInput
             style={[styles.input, styles.despesaInput]}
             placeholder="Insira a despesa"
-            value={despesa.nome}
+            value={despesa.name}
             onChangeText={(text) => {
               const newDespesas = [...despesas];
-              newDespesas[index].nome = text;
+              newDespesas[index].name = text;
               setDespesas(newDespesas);
             }}
           />
           <TextInput
             style={[styles.input, styles.despesaInput]}
             placeholder="Insira o valor"
-            value={despesa.custo}
+            value={despesa.cost}
             onChangeText={(text) => {
               const newDespesas = [...despesas];
-              newDespesas[index].custo = text;
+              newDespesas[index].cost = text;
               setDespesas(newDespesas);
             }}
+            keyboardType="numeric"
           />
           <TouchableOpacity onPress={() => removerDespesa(despesa.id)}>
             <Ionicons name="trash" size={24} color="red" />
@@ -95,20 +154,20 @@ export default function AdicionePlano() {
           <TextInput
             style={[styles.input, styles.tarefaInput]}
             placeholder="Nome da tarefa"
-            value={tarefa.nome}
+            value={tarefa.name}
             onChangeText={(text) => {
               const newTarefas = [...tarefas];
-              newTarefas[index].nome = text;
+              newTarefas[index].name = text;
               setTarefas(newTarefas);
             }}
           />
           <TextInput
             style={[styles.input, styles.tarefaInput]}
             placeholder="Prazo"
-            value={tarefa.prazo}
+            value={tarefa.deadline}
             onChangeText={(text) => {
               const newTarefas = [...tarefas];
-              newTarefas[index].prazo = text;
+              newTarefas[index].deadline = text;
               setTarefas(newTarefas);
             }}
           />
@@ -120,7 +179,7 @@ export default function AdicionePlano() {
       <TouchableOpacity style={styles.addButton} onPress={adicionarTarefa}>
         <Text style={styles.addButtonText}>Adicionar mais item</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.submitButton}>
+      <TouchableOpacity onPress={Create} style={styles.submitButton}>
         <Text style={styles.submitButtonText}>Adicionar</Text>
       </TouchableOpacity>
     </ScrollView>

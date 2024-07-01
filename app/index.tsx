@@ -1,19 +1,30 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import { usePlanDatabase, PlanDatabase } from '../database/usePlanDatabase';
 import imgUsr from '../assets/images/imgUsr.png';
-
-const plans = [
-  { id: '1', nome: 'Viagem para a Praia', categoria: 'Viagem', custo: '1.000 R$', icone: '🏖️' },
-  { id: '2', nome: 'Festa de Aniversário', categoria: 'Pessoal', custo: '500 R$', icone: '📆' },
-  { id: '3', nome: 'Investimento em Ações', categoria: 'Finanças', custo: '1.000 R$', icone: '📈' },
-  { id: '4', nome: 'Viagem para o Exterior', categoria: 'Viagem', custo: '3.000 R$', icone: '✈️' },
-  { id: '5', nome: 'Projeto de Voluntariado', categoria: 'Social', custo: '0 R$', icone: '🤝' },
-  { id: '6', nome: 'Compra de Novo Carro', categoria: 'Veículo', custo: '25.000 R$', icone: '🚗' },
-];
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { getAll } = usePlanDatabase();
+  const [plans, setPlans] = useState<PlanDatabase[]>([]);
+
+  useEffect(() => {
+    async function fetchPlans() {
+      try {
+        const plansFromDB = await getAll();
+        setPlans(plansFromDB);
+      } catch (error) {
+        console.error('Erro ao buscar planos:', error);
+      }
+    }
+
+    fetchPlans();
+  }, []);
+
+  function alerta(){
+    Alert.alert("Em desenvolvimento...")
+  }
 
   return (
     <View style={styles.container}>
@@ -33,15 +44,15 @@ export default function HomeScreen() {
       <Text style={styles.tituloSecao}>Planos Registrados</Text>
       <FlatList
         data={plans}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => router.push('/detalhe_plano')}>
+          <TouchableOpacity onPress={() => router.push(`/detalhe_plano?id=${item.id}`)}>
             <View style={styles.itemPlano}>
               <Text style={styles.iconePlano}>{item.icone}</Text>
               <View style={styles.detalhesPlano}>
                 <View style={styles.cabecalhoPlano}>
                   <Text style={styles.nomePlano}>{item.nome}</Text>
-                  <Text style={styles.custoPlano}>{item.custo}</Text>
+                  <Text style={styles.custoPlano}>{item.custo} R$</Text>
                 </View>
                 <Text style={styles.categoriaPlano}>{item.categoria}</Text>
               </View>
@@ -50,8 +61,8 @@ export default function HomeScreen() {
         )}
         ListFooterComponent={
           <View>
-            <TouchableOpacity style={[styles.btn, styles.btnVerPlanejamento]}>
-              <Text style={[styles.btnTexto, styles.btnVerPlanejamentoTexto]}>Ver todo planejamento</Text>
+            <TouchableOpacity style={[styles.btn, styles.btnVerPlanejamento]} onPress={alerta}>
+              <Text style={[styles.btnTexto, styles.btnVerPlanejamentoTexto]}>Analise de gastos</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.btn, styles.btnAdicionar]} onPress={() => router.push('/adicionar_plano')}>
               <Text style={styles.btnTexto}>Adicionar plano</Text>

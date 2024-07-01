@@ -1,22 +1,57 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-const expenses = [
-  { id: '1', nome: 'Despesa 1', custo: '200 R$' },
-  { id: '2', nome: 'Despesa 2', custo: '150 R$' },
-  { id: '3', nome: 'Despesa 3', custo: '100 R$' },
-  { id: '4', nome: 'Despesa 4', custo: '50 R$' },
-];
-
-const plan = {
-  tasks: [
-    { id: '1', nome: 'Item 1', prazo: '30/11/2024', finalizado: true },
-    { id: '2', nome: 'Item 2', prazo: '20/12/2024', finalizado: false },
-  ]
-};
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { usePlanDatabase } from '../database/usePlanDatabase';
 
 export default function PlanDetails() {
+  const { id } = useLocalSearchParams();
+  const { getPlanById, getAllExpenses, getAllTasks, deletePlanById } = usePlanDatabase();
+  const [plan, setPlan] = useState(null);
+  const [expenses, setExpenses] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const router = useRouter();
+
+  useEffect(() => {
+    async function fetchPlanDetails() {
+      try {
+        const planData = await getPlanById(Number(id));
+        const expensesData = await getAllExpenses(Number(id));
+        const tasksData = await getAllTasks(Number(id));
+
+        setPlan(planData);
+        setExpenses(expensesData);
+        setTasks(tasksData);
+
+        console.log(tasks)
+        console.log(plan)
+      } catch (error) {
+        console.error('Erro ao buscar detalhes do plano:', error);
+      }
+    }
+
+    fetchPlanDetails();
+  }, [id]);
+
+  const handleDeletePlan = async () => {
+    try {
+      await deletePlanById(Number(id));
+      Alert.alert("Plano deletado com sucesso!");
+      router.push('/');
+    } catch (error) {
+      console.error('Erro ao deletar plano:', error);
+      Alert.alert("Erro ao deletar plano.");
+    }
+  };
+
+  if (!plan) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.titulo}>Carregando...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.titulo}>Visualização detalhada do plano</Text>
@@ -35,6 +70,7 @@ export default function PlanDetails() {
           <Text style={styles.btnEditarTexto}>Editar</Text>
         </TouchableOpacity>
       </View>
+      <Text style={styles.descricao}>{plan.descricao}</Text>
 
       <View style={styles.secao}>
         <Text style={styles.tituloSecao}>Despesas Associadas</Text>
@@ -45,26 +81,26 @@ export default function PlanDetails() {
 
       <FlatList
         data={expenses}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         numColumns={2}
         renderItem={({ item }) => (
           <View style={styles.caixaGasto}>
-            <Text style={styles.nomeGasto}>{item.nome}</Text>
-            <Text style={styles.custoGasto}>{item.custo}</Text>
+            <Text style={styles.nomeGasto}>{item.name}</Text>
+            <Text style={styles.custoGasto}>{item.cost} R$</Text>
           </View>
         )}
       />
 
       <View style={styles.secao}>
         <Text style={styles.tituloSecao}>Lista de itens/tarefas</Text>
-        <TouchableOpacity style={styles.btnEditar}>
+        {/* <TouchableOpacity style={styles.btnEditar}>
           <Text style={styles.btnEditarTexto}>Editar</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       <FlatList
-        data={plan.tasks}
-        keyExtractor={(item) => item.id}
+        data={tasks}
+        keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.itemTarefa}>
             <Ionicons
@@ -73,8 +109,8 @@ export default function PlanDetails() {
               color={item.finalizado ? 'green' : 'gray'}
             />
             <View style={styles.detalheTarefa}>
-              <Text style={styles.nomeTarefa}>{item.nome}</Text>
-              <Text style={styles.prazoTarefa}>Data limite: {item.prazo}</Text>
+              <Text style={styles.nomeTarefa}>{item.name}</Text>
+              <Text style={styles.prazoTarefa}>Data limite: {item.deadline}</Text>
             </View>
             <TouchableOpacity style={styles.btnEditar}>
               <Text style={styles.btnEditarTexto}>Editar</Text>
@@ -83,7 +119,7 @@ export default function PlanDetails() {
         )}
       />
 
-      <TouchableOpacity style={styles.btnDeletar}>
+      <TouchableOpacity style={styles.btnDeletar} onPress={handleDeletePlan}>
         <Text style={styles.textoBtnDeletar}>Deletar Plano</Text>
       </TouchableOpacity>
     </View>
@@ -113,6 +149,10 @@ const styles = StyleSheet.create({
   tituloSecao: {
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  descricao: {
+    fontSize: 16,
+    marginBottom: 20,
   },
   btnEditar: {
     backgroundColor: '#fff',

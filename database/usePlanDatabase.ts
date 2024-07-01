@@ -172,5 +172,20 @@ export function usePlanDatabase() {
     }
   }
 
-  return { create, getAll, insertTestData, createExpense, getAllExpenses, createTask, getAllTasks, getPlanById, deletePlanById };
+  // Função para atualizar a descrição do plano pelo ID
+  async function updatePlanDescription(id: number, newDescription: string) {
+    const statement = await database.prepareAsync(
+      'UPDATE plans SET descricao = ? WHERE id = ?'
+    );
+
+    try {
+      await statement.executeAsync([newDescription, id]);
+    } catch (error) {
+      throw error;
+    } finally {
+      await statement.finalizeAsync();
+    }
+  }
+
+  return { create, getAll, insertTestData, createExpense, getAllExpenses, createTask, getAllTasks, getPlanById, deletePlanById, updatePlanDescription };
 }

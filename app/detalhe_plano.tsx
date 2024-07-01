@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { usePlanDatabase } from '../database/usePlanDatabase';
 
 export default function PlanDetails() {
   const { id } = useLocalSearchParams();
-  const { getPlanById, getAllExpenses, getAllTasks, deletePlanById } = usePlanDatabase();
+  const { getPlanById, getAllExpenses, getAllTasks, deletePlanById, updatePlanDescription } = usePlanDatabase();
   const [plan, setPlan] = useState(null);
   const [expenses, setExpenses] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [newDescription, setNewDescription] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -22,9 +24,10 @@ export default function PlanDetails() {
         setPlan(planData);
         setExpenses(expensesData);
         setTasks(tasksData);
+        setNewDescription(planData.descricao);
 
-        console.log(tasks)
-        console.log(plan)
+        console.log(tasks);
+        console.log(plan);
       } catch (error) {
         console.error('Erro ao buscar detalhes do plano:', error);
       }
@@ -41,6 +44,18 @@ export default function PlanDetails() {
     } catch (error) {
       console.error('Erro ao deletar plano:', error);
       Alert.alert("Erro ao deletar plano.");
+    }
+  };
+
+  const handleSaveDescription = async () => {
+    try {
+      await updatePlanDescription(Number(id), newDescription);
+      setPlan({ ...plan, descricao: newDescription });
+      setIsEditingDescription(false);
+      Alert.alert("Descrição atualizada com sucesso!");
+    } catch (error) {
+      console.error('Erro ao atualizar descrição:', error);
+      Alert.alert("Erro ao atualizar descrição.");
     }
   };
 
@@ -66,11 +81,31 @@ export default function PlanDetails() {
 
       <View style={styles.secao}>
         <Text style={styles.tituloSecao}>Descrição do plano</Text>
-        <TouchableOpacity style={styles.btnEditar}>
+        <TouchableOpacity
+          style={styles.btnEditar}
+          onPress={() => setIsEditingDescription(true)}
+        >
           <Text style={styles.btnEditarTexto}>Editar</Text>
         </TouchableOpacity>
       </View>
-      <Text style={styles.descricao}>{plan.descricao}</Text>
+
+      {isEditingDescription ? (
+        <View>
+          <TextInput
+            style={styles.descricaoInput}
+            value={newDescription}
+            onChangeText={setNewDescription}
+          />
+          <TouchableOpacity
+            style={styles.btnSalvar}
+            onPress={handleSaveDescription}
+          >
+            <Text style={styles.btnSalvarTexto}>Salvar</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <Text style={styles.descricao}>{plan.descricao}</Text>
+      )}
 
       <View style={styles.secao}>
         <Text style={styles.tituloSecao}>Despesas Associadas</Text>
@@ -93,9 +128,6 @@ export default function PlanDetails() {
 
       <View style={styles.secao}>
         <Text style={styles.tituloSecao}>Lista de itens/tarefas</Text>
-        {/* <TouchableOpacity style={styles.btnEditar}>
-          <Text style={styles.btnEditarTexto}>Editar</Text>
-        </TouchableOpacity> */}
       </View>
 
       <FlatList
@@ -104,9 +136,9 @@ export default function PlanDetails() {
         renderItem={({ item }) => (
           <View style={styles.itemTarefa}>
             <Ionicons
-              name={item.finalizado ? 'checkmark-circle' : 'ellipse-outline'}
+              name={item.completed ? 'checkmark-circle' : 'ellipse-outline'}
               size={24}
-              color={item.finalizado ? 'green' : 'gray'}
+              color={item.completed ? 'green' : 'gray'}
             />
             <View style={styles.detalheTarefa}>
               <Text style={styles.nomeTarefa}>{item.name}</Text>
@@ -154,6 +186,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 20,
   },
+  descricaoInput: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+  },
   btnEditar: {
     backgroundColor: '#fff',
     borderWidth: 1,
@@ -165,6 +205,16 @@ const styles = StyleSheet.create({
   },
   btnEditarTexto: {
     color: '#000',
+  },
+  btnSalvar: {
+    backgroundColor: '#4CAF50',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  btnSalvarTexto: {
+    color: '#fff',
   },
   caixaGasto: {
     flex: 1,

@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # Welcome to your Expo app 👋
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
@@ -11,7 +11,14 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Start the app
+2. Install SQLite dependency:
+   ```bash
+   npm install expo-sqlite
+   ```
+
+   Import and use usePlanDatabase.ts functions (create, getAll, createExpense, getAllExpenses, createTask, getAllTasks) to interact with your SQLite database.
+
+3. Start the app
 
    ```bash
     npx expo start

@@ -2,9 +2,9 @@ import { SQLiteDatabase } from 'expo-sqlite';
 
 export async function initializeDatabase(database: SQLiteDatabase) {
 
-  await database.execAsync('DROP TABLE IF EXISTS plans');
-  await database.execAsync('DROP TABLE IF EXISTS expenses');
-  await database.execAsync('DROP TABLE IF EXISTS tasks');
+  // await database.execAsync('DROP TABLE IF EXISTS plans');
+  // await database.execAsync('DROP TABLE IF EXISTS expenses');
+  // await database.execAsync('DROP TABLE IF EXISTS tasks');
 
   await database.execAsync(`
     CREATE TABLE IF NOT EXISTS plans (
